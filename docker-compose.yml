@@ -2,34 +2,46 @@ version: "3.8"
 
 services:
   db:
-    image: mariadb:10
+    image: mariadb:10.11
     container_name: nc-tristan-db
     restart: unless-stopped
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     volumes:
-      - /disk/data-01/tristan/data-nc/db:/var/lib/mysql
+      - ${DB_VOLUME_PATH:-/disk/data-01/tristan/data-nc/db}:/var/lib/mysql
       - /etc/localtime:/etc/localtime:ro
     environment:
       - MARIADB_AUTO_UPGRADE=1
-      - MARIADB_ROOT_PASSWORD=
-      - MARIADB_DATABASE=nextcloud
-      - MARIADB_USER=nextcloud
-      - MARIADB_PASSWORD=
+      - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
+      - MARIADB_DATABASE=${MYSQL_DATABASE}
+      - MARIADB_USER=${MYSQL_USER}
+      - MARIADB_PASSWORD=${MYSQL_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u${MYSQL_USER} -p\"${MYSQL_PASSWORD}\" > /dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
   app:
-    image: nextcloud
+    image: nextcloud:32
     container_name: nc-tristan-app
     restart: unless-stopped
     ports:
       - 23001:80
     volumes:
-      - /disk/data-01/tristan/data-nc/nc:/var/www/html
+      - ${NC_VOLUME_PATH:-/disk/data-01/tristan/data-nc/nc}:/var/www/html
       - ./config.php:/var/www/html/config/config.php
       - /etc/localtime:/etc/localtime:ro
     environment:
       - MYSQL_HOST=db
-      - MYSQL_DATABASE=nextcloud
-      - MYSQL_USER=nextcloud
-      - MYSQL_PASSWORD=
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/status.php || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
 
 networks:
   default:

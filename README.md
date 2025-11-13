@@ -109,6 +109,41 @@ Setelah container berjalan, lakukan instalasi awal Nextcloud melalui browser (me
 
 ---
 
+
+### Panduan singkat deployment aman
+
+1. Salin `.env.example` menjadi `.env` dan isi password serta path host sebelum menjalankan:
+
+```powershell
+copy .env.example .env
+# sunting .env dan masukkan password kuat serta path DB/NC yang sesuai
+```
+
+2. Jangan pernah meng-commit `.env` atau `config.php` ke repository. Repositori ini sudah menyertakan `.gitignore` untuk mencegahnya.
+
+3. Untuk produksi, lebih disarankan menggunakan Docker Secrets atau pengelola rahasia (secret manager) daripada menyimpan rahasia dalam bentuk plaintext `.env`.
+
+### Backup
+
+Repositori ini menyertakan skrip bantuan backup sederhana di `./scripts/backup.sh` yang melakukan:
+
+- Dump database MariaDB dari container `db` menggunakan `mysqldump`.
+- Mengarsipkan folder `data` Nextcloud dari container `app`.
+
+Penggunaan (dari root repo):
+
+```powershell
+./scripts/backup.sh ./backups
+```
+
+Pastikan `.env` Anda berisi `MYSQL_USER`, `MYSQL_PASSWORD`, dan `MYSQL_DATABASE` (atau ekspor variabel tersebut di shell) agar skrip dapat mengakses database.
+
+Rekomendasi:
+
+- Jadwalkan backup dengan cron / systemd timer, dan salin backup ke penyimpanan off-site.
+- Uji prosedur restore secara berkala.
+
+
 ### 4. Mengambil File Konfigurasi
 
 Setelah proses instalasi Nextcloud selesai, hentikan semua container:

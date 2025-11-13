@@ -1,3 +1,16 @@
+# Ignore Nextcloud runtime config and data
+config.php
+data-nc/
+data-nc
+docker/data-nc/
+
+# Env files
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
 # === 1️⃣ Direktori Data & Backup ===
 data/
 backup/

@@ -13,6 +13,23 @@
 
 | [Sekilas Tentang](#abstrak) | [Instalasi](#instalasi--konfigurasi) | [Konfigurasi](#7-konfigurasi-reverse-proxy-via-web-gui) | [Keamanan](#keamanan) | [Cara Pemakaian](#penggunaan-nextcloud) | [Pembahasan](#pembahasan) | [Referensi](#referensi) |
 
+## Perubahan Terbaru
+
+Bagian ini mencatat perubahan-perubahan yang telah dilakukan pada repository untuk merapikan konfigurasi dan mengikuti praktik terbaik (ringkasan dalam Bahasa Indonesia):
+
+- **`.gitignore`**: Diperbarui untuk mengabaikan file runtime dan rahasia seperti `config.php`, data, dan `.env`.
+- **`.env.example`**: Ditambahkan contoh variabel lingkungan yang diperlukan (database, path volume, dsb.).
+- **`docker-compose.yml`**: Dirombak agar menggunakan variabel lingkungan (`${...}`), men-pin image versi, dan menambahkan healthchecks untuk `db` dan `app`.
+- **`docker-compose.ci.yml`**: Ditambahkan sebagai override khusus CI agar tidak mem-mount `config.php` dari repo saat tes otomatis.
+- **`scripts/backup.sh` dan `scripts/restore.sh`**: Ditambahkan skrip bantuan untuk backup/restore database dan data Nextcloud.
+- **`config.php.example`**: Ditambahkan contoh `config.php` aman (tanpa rahasia dan dengan `installed => false`).
+- **`config.php`**: File runtime `config.php` dihapus dari version control untuk mencegah bocornya rahasia dan memudahkan instalasi awal di CI/lokal.
+- **Workflow CI `smoke.yml`**: Workflow smoke test yang sebelumnya ditambahkan telah dinonaktifkan/dihapus atas permintaan pengguna (terlalu rumit untuk alur saat ini).
+
+Catatan singkat:
+- Jika Anda ingin menjalankan CI smoke test lagi nanti, ada file `docker-compose.ci.yml` dan langkah-langkah yang sempat dibuat; bisa diaktifkan kembali atau disederhanakan.
+- Jangan commit berkas sensitif (`.env`, `config.php`) — gunakan `config.php.example` sebagai referensi.
+
 ## Abstrak
 
 [⬆️ Kembali ke atas](#daftar-isi)

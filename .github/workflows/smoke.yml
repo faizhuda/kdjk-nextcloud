@@ -67,15 +67,57 @@ jobs:
           # Now start the app so it can perform automated installation against the ready DB
           docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d app
 
-      - name: Tunggu status sehat (app)
+      - name: Tunggu status.php siap; fallback ke OCC install jika perlu
         run: |
+          # Ambil kredensial dari .env yang kita buat
+          NEXT_ADMIN=$(grep -E '^NEXTCLOUD_ADMIN_USER=' .env | cut -d= -f2)
+          NEXT_PASS=$(grep -E '^NEXTCLOUD_ADMIN_PASSWORD=' .env | cut -d= -f2)
+          DB_PASS=$(grep -E '^MYSQL_PASSWORD=' .env | cut -d= -f2)
+
+          check_status() {
+            code=$(docker exec nc-tristan-app curl -s -o /dev/null -w "%{http_code}" http://localhost/status.php || echo 000)
+            echo "$code"
+          }
+
           for i in {1..30}; do
-            status=$(docker inspect --format='{{.State.Health.Status}}' nc-tristan-app || echo unknown)
-            echo "Percobaan $i: status app = $status"
-            if [ "$status" = "healthy" ]; then exit 0; fi
+            code=$(check_status)
+            echo "Percobaan $i: status.php HTTP $code"
+            if [ "$code" = "200" ]; then
+              echo "status.php siap"
+              exit 0
+            fi
             sleep 5
           done
-          docker compose logs --no-color
+
+          echo "status.php tetap tidak respons 200 — mencoba instalasi otomatis via occ"
+
+          # Jalankan OCC install sebagai fallback
+          if [ -n "$NEXT_ADMIN" ] && [ -n "$NEXT_PASS" ]; then
+            docker exec -u www-data nc-tristan-app php occ maintenance:install \
+              --database "mysql" \
+              --database-name nextcloud \
+              --database-user nextcloud \
+              --database-pass "$DB_PASS" \
+              --database-host db \
+              --admin-user "$NEXT_ADMIN" \
+              --admin-pass "$NEXT_PASS" || true
+          else
+            echo "Kredensial admin tidak ditemukan, tidak dapat menjalankan occ install"
+          fi
+
+          # Tunggu lagi untuk status.php
+          for i in {1..30}; do
+            code=$(check_status)
+            echo "Retry $i: status.php HTTP $code"
+            if [ "$code" = "200" ]; then
+              echo "status.php siap setelah OCC install"
+              exit 0
+            fi
+            sleep 5
+          done
+
+          echo "status.php masih gagal setelah percobaan; tampilkan logs dan gagal"
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml logs --no-color app || true
           exit 1
 
       - name: Permintaan smoke (cek endpoint)

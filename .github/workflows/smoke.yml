@@ -15,24 +15,24 @@ jobs:
       - name: Siapkan Docker Compose (v2)
         uses: docker/setup-buildx-action@v2
 
-        - name: Buat .env sementara untuk CI
-          run: |
-            set -e
-            # buat password acak untuk CI (tidak disimpan di repo)
-            if command -v openssl >/dev/null 2>&1; then
-              PASSWORD=$(openssl rand -hex 16)
-            else
-              PASSWORD=$(date +%s)
-            fi
-            mkdir -p ci_data/db ci_data/nc
-            cat > .env <<EOF
-  MARIADB_ROOT_PASSWORD=${PASSWORD}
-  MYSQL_DATABASE=nextcloud
-  MYSQL_USER=nextcloud
-  MYSQL_PASSWORD=${PASSWORD}
-  DB_VOLUME_PATH=./ci_data/db
-  NC_VOLUME_PATH=./ci_data/nc
-  EOF
+      - name: Buat .env sementara untuk CI
+        run: |
+          set -e
+          # buat password acak untuk CI (tidak disimpan di repo)
+          if command -v openssl >/dev/null 2>&1; then
+            PASSWORD=$(openssl rand -hex 16)
+          else
+            PASSWORD=$(date +%s)
+          fi
+          mkdir -p ci_data/db ci_data/nc
+          cat > .env <<EOF
+MARIADB_ROOT_PASSWORD=${PASSWORD}
+MYSQL_DATABASE=nextcloud
+MYSQL_USER=nextcloud
+MYSQL_PASSWORD=${PASSWORD}
+DB_VOLUME_PATH=./ci_data/db
+NC_VOLUME_PATH=./ci_data/nc
+EOF
       - name: Mulai layanan
         run: |
           docker compose -f docker-compose.yml up -d

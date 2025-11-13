@@ -15,7 +15,7 @@
 
 ## Perubahan Terbaru
 
-Bagian ini mencatat perubahan-perubahan yang telah dilakukan pada repository untuk merapikan konfigurasi dan mengikuti praktik terbaik (ringkasan dalam Bahasa Indonesia):
+Bagian ini mencatat perubahan-perubahan yang telah dilakukan pada repository untuk merapikan konfigurasi dan mengikuti praktik terbaik:
 
 - **`.gitignore`**: Diperbarui untuk mengabaikan file runtime dan rahasia seperti `config.php`, data, dan `.env`.
 - **`.env.example`**: Ditambahkan contoh variabel lingkungan yang diperlukan (database, path volume, dsb.).
@@ -27,7 +27,7 @@ Bagian ini mencatat perubahan-perubahan yang telah dilakukan pada repository unt
 - **Workflow CI `smoke.yml`**: Workflow smoke test yang sebelumnya ditambahkan telah dinonaktifkan/dihapus atas permintaan pengguna (terlalu rumit untuk alur saat ini).
 
 Catatan singkat:
-- Jika Anda ingin menjalankan CI smoke test lagi nanti, ada file `docker-compose.ci.yml` dan langkah-langkah yang sempat dibuat; bisa diaktifkan kembali atau disederhanakan.
+- Jika ingin menjalankan CI smoke test lagi nanti, ada file `docker-compose.ci.yml` dan langkah-langkah yang sempat dibuat; bisa diaktifkan kembali atau disederhanakan.
 - Jangan commit berkas sensitif (`.env`, `config.php`) — gunakan `config.php.example` sebagai referensi.
 
 ## Abstrak

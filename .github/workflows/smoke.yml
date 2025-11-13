@@ -26,19 +26,24 @@ jobs:
           fi
           mkdir -p ci_data/db ci_data/nc
           # Tulis file .env secara aman tanpa heredoc untuk menghindari masalah parsing YAML
-          printf 'MARIADB_ROOT_PASSWORD=%s\nMYSQL_DATABASE=nextcloud\nMYSQL_USER=nextcloud\nMYSQL_PASSWORD=%s\nDB_VOLUME_PATH=./ci_data/db\nNC_VOLUME_PATH=./ci_data/nc\n' "$PASSWORD" "$PASSWORD" > .env
+          # Sertakan NEXTCLOUD_ADMIN_* agar Nextcloud dapat melakukan instalasi otomatis di CI
+          printf 'MARIADB_ROOT_PASSWORD=%s\nMYSQL_DATABASE=nextcloud\nMYSQL_USER=nextcloud\nMYSQL_PASSWORD=%s\nDB_VOLUME_PATH=./ci_data/db\nNC_VOLUME_PATH=./ci_data/nc\nNEXTCLOUD_ADMIN_USER=ciadmin\nNEXTCLOUD_ADMIN_PASSWORD=%s\n' "$PASSWORD" "$PASSWORD" "$PASSWORD" > .env
 
       - name: Sembunyikan config.php agar instalasi awal berjalan
         run: |
-          if [ -f ./config.php ]; then
-            mv ./config.php ./config.php.ci.bak
+          if [ -e ./config.php ]; then
+            if [ -f ./config.php ]; then
+              mv ./config.php ./config.php.ci.bak
+            else
+              mv ./config.php ./config.php.ci.bak.dir
+            fi
             echo "config.php dipindahkan sementara"
           else
             echo "Tidak ada config.php di repo, lanjut"
           fi
       - name: Mulai layanan
         run: |
-          docker compose -f docker-compose.yml up -d
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
 
       - name: Tunggu status sehat (app)
         run: |
@@ -63,9 +68,16 @@ jobs:
       - name: Hentikan layanan
         if: always()
         run: |
-          docker compose -f docker-compose.yml down -v
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml down -v
           # kembalikan config.php jika kita memindahkannya
           if [ -f ./config.php.ci.bak ]; then
+            rm -rf ./config.php || true
             mv ./config.php.ci.bak ./config.php
-            echo "config.php dikembalikan"
+            chmod 644 ./config.php || true
+            echo "config.php dikembalikan (file)"
+          fi
+          if [ -d ./config.php.ci.bak.dir ]; then
+            rm -rf ./config.php || true
+            mv ./config.php.ci.bak.dir ./config.php
+            echo "config.php dikembalikan (direktori)"
           fi

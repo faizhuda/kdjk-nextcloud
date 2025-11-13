@@ -1,0 +1,21 @@
+<?php
+$CONFIG = array (
+  /* Contoh konfigurasi Nextcloud untuk referensi.
+     Jangan simpan rahasia di file ini — gunakan environment variables atau Docker secrets. */
+  'instanceid' => '',
+  'passwordsalt' => '',
+  'secret' => '',
+  'trusted_domains' => 
+  array (
+    0 => 'localhost',
+  ),
+  'datadirectory' => '/var/www/html/data',
+  'dbtype' => 'mysql',
+  'dbname' => 'nextcloud',
+  'dbhost' => 'db',
+  'dbtableprefix' => 'oc_',
+  'mysql.utf8mb4' => true,
+  'dbuser' => 'nextcloud',
+  'dbpassword' => '',
+  'installed' => false,
+);

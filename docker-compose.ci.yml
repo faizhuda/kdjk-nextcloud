@@ -1,0 +1,8 @@
+services:
+  db:
+    volumes:
+      - ${DB_VOLUME_PATH:-./ci_data/db}:/var/lib/mysql
+  app:
+    volumes:
+      - ${NC_VOLUME_PATH:-./ci_data/nc}:/var/www/html
+      - /etc/localtime:/etc/localtime:ro

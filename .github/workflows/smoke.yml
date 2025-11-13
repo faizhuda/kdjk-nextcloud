@@ -41,9 +41,31 @@ jobs:
           else
             echo "Tidak ada config.php di repo, lanjut"
           fi
-      - name: Mulai layanan
+      - name: Mulai layanan (db lalu app)
         run: |
-          docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
+          # Start only the database first so it finishes initialization
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d db
+
+          # Tunggu sampai container DB sehat (healthcheck di compose)
+          for i in {1..30}; do
+            status=$(docker inspect --format='{{.State.Health.Status}}' nc-tristan-db || echo unknown)
+            echo "Percobaan $i: status db = $status"
+            if [ "$status" = "healthy" ]; then
+              echo "DB sehat, melanjutkan..."
+              break
+            fi
+            sleep 2
+          done
+
+          status=$(docker inspect --format='{{.State.Health.Status}}' nc-tristan-db || echo unknown)
+          if [ "$status" != "healthy" ]; then
+            echo "DB tidak menjadi sehat, keluaran logs:";
+            docker compose -f docker-compose.yml -f docker-compose.ci.yml logs --no-color db || true
+            exit 1
+          fi
+
+          # Now start the app so it can perform automated installation against the ready DB
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d app
 
       - name: Tunggu status sehat (app)
         run: |
